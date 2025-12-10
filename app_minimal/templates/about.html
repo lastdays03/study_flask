@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Flask Template App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <h1>Flask Template About</h1>
+    {% if version == '2.0.1' %}
+    <p>Flask Version: {{ version }}</p>
+    {% endif %}
+    <p>Flask Name: {{ name }}</p>
+    <ul>
+        {% for user in users %}
+        <li>{{ user }}</li>
+        {% endfor %}
+    </ul>
+</body>
+
+</html>
