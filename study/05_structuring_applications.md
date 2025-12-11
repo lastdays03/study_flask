@@ -175,6 +175,33 @@ auth_bp = Blueprint('auth', __name__)
 from . import routes
 ```
 
+#### 5) 인덱스 페이지 (Root Route) 설정
+마이크로서비스 구조에서도 메인 페이지(`/`)가 필요합니다. 일반적으로 `main` 블루프린트를 생성하여 처리합니다.
+
+**`myapp/main/__init__.py`**:
+```python
+from flask import Blueprint
+main_bp = Blueprint('main', __name__)
+from . import routes
+```
+
+**`myapp/main/routes.py`**:
+```python
+from . import main_bp
+
+@main_bp.route('/')
+def index():
+    return "<h1>Index Page</h1>"
+```
+
+**`myapp/__init__.py` (등록)**:
+```python
+    from myapp.main import main_bp
+    app.register_blueprint(main_bp, url_prefix='/')
+```
+이처럼 `url_prefix='/'`로 설정하면 해당 블루프린트의 `@main_bp.route('/')`가 실제 도메인의 루트(`http://localhost:5000/`)가 됩니다.
+
+
 ### ✅ 마이크로서비스 아키텍처에서의 주요 개념
 
 1.  **모듈화 (Modularity)**: `Blueprint`를 통해 기능(Auth, User, Product 등)을 완전히 분리합니다. 나중에 특정 기능을 별도의 마이크로서비스로 떼어낼 때, 해당 폴더만 분리하면 되므로 리팩토링 비용이 줄어듭니다.
