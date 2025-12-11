@@ -183,6 +183,34 @@ from . import routes
 
 ---
 
+### 📘 블루프린트(Blueprint) 생성자 파라미터 상세 설명
+
+`Blueprint` 객체를 생성할 때 사용할 수 있는 주요 파라미터는 다음과 같습니다. 이를 통해 템플릿 폴더나 정적 폴더를 모듈별로 격리할 수 있습니다.
+
+```python
+auth_bp = Blueprint(
+    'auth',                 # 1. Blueprint 이름 (필수, url_for('auth.login')에서 사용됨)
+    __name__,               # 2. 패키지나 모듈의 이름 (필수, 리소스 경로 찾기에 사용됨)
+    static_folder='static', # 3. 정적 파일 폴더 이름 (기본값: None)
+    template_folder='templates', # 4. 템플릿 파일 폴더 이름 (기본값: None)
+    url_prefix='/auth'      # 5. URL 접두사 (여기서 설정하거나 register_blueprint에서 설정 가능)
+)
+```
+
+| 파라미터 | 설명 | 예시 |
+| :--- | :--- | :--- |
+| **name** | 블루프린트의 고유 이름입니다. `url_for('이름.라우트')` 형태로 URL을 빌드할 때 사용됩니다. | `'auth'`, `'api_v1'`, `'user'` |
+| **import_name** | 블루프린트 패키지의 이름입니다. 보통 `__name__`을 사용하여 현재 모듈의 위치를 기반으로 리소스를 찾게 합니다. | `__name__` |
+| **static_folder** | 해당 블루프린트 전용 정적 파일(CSS, JS 등)이 있는 폴더명입니다. 설정 시 `/static` 경로가 자동으로 제공됩니다. | `'static'`, `'assets'` |
+| **template_folder** | 해당 블루프린트 전용 템플릿 파일이 있는 폴더명입니다. Flask는 앱의 `templates` 폴더를 먼저 찾고, 없으면 여기를 찾습니다. | `'templates'`, `'views'` |
+| **url_prefix** | 이 블루프린트에 등록된 모든 라우트 앞에 붙을 URL 접두사입니다. `register_blueprint` 시점에도 설정 가능하며, 양쪽 다 설정되면 합쳐집니다. | `'/auth'`, `'/api/v1'` |
+| **static_url_path** | 정적 파일을 제공할 URL 경로입니다. 기본값은 `/{static_folder}`입니다. | `'/auth/static'` |
+
+> [!NOTE]
+> **템플릿 폴더 찾기 우선순위**: Flask는 기본적으로 애플리케이션 최상위 `templates` 폴더를 먼저 검색합니다. 따라서 블루프린트 내부 `templates/login.html`과 최상위 `templates/login.html`이 둘 다 존재하면, **최상위 폴더의 파일**이 우선 사용됩니다. 이를 방지하기 위해 블루프린트 템플릿 폴더 안에 하위 디렉토리(예: `templates/auth/login.html`)를 만드는 것이 관례입니다.
+
+---
+
 ## 요약
 
 | 구분 | 기본 구조 | 마이크로서비스/확장 구조 |
