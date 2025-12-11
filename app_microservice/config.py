@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key'
@@ -7,7 +8,8 @@ class Config:
 class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-        'sqlite:///dev.db'
+        f'sqlite:///{Path(__file__).parent / "local.sqlite"}'
+    SQLALCHEMY_ECHO = True
 
 class ProductionConfig(Config):
     DEBUG = False

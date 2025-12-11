@@ -12,3 +12,4 @@ uploads/
 .env
 .flaskenv
 .flask_config.py
+migrations

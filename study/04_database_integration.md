@@ -1,96 +1,189 @@
 # 04. 데이터베이스 연동 (Database Integration)
 
-Flask는 특정 데이터베이스를 강제하지 않지만, 파이썬 생태계에서 가장 널리 쓰이는 `SQLAlchemy` ORM(Object Relational Helper)을 플라스크에 맞게 래핑한 **Flask-SQLAlchemy**를 주로 사용합니다.
+Flask는 특정 데이터베이스를 강제하지 않지만, 파이썬 생태계에서 가장 널리 쓰이는 `SQLAlchemy` ORM(Object Relational Mapping)을 플라스크에 맞게 래핑한 **Flask-SQLAlchemy**를 주로 사용합니다. 또한, 데이터베이스 스키마 변경 사항을 관리하기 위해 **Flask-Migrate** (Alembic 기반)를 함께 사용합니다.
 
-## 1. 설치
+---
+
+## 1. 주요 개념 및 라이브러리
+
+-   **SQLAlchemy**: 파이썬의 강력한 ORM 툴킷입니다. SQL을 직접 작성하지 않고 파이썬 객체로 데이터베이스를 다룰 수 있게 해줍니다.
+-   **Flask-SQLAlchemy**: Flask 앱 컨텍스트 내에서 SQLAlchemy를 쉽게 사용할 수 있도록 설정을 간소화하고 추가 기능을 제공하는 확장 플러그인입니다.
+-   **Flask-Migrate**: 모델이 변경될 때 테이블을 drop/create 하지 않고, 변경 사항(Migration)을 감지하여 DB 스키마를 업데이트해주는 도구입니다.
+
+---
+
+## 2. 설치
 
 ```bash
-pip install Flask-SQLAlchemy
+pip install Flask-SQLAlchemy Flask-Migrate
 ```
 
-## 2. 설정 및 모델 정의
+---
 
-`app.py` 또는 별도의 파일에서 DB를 설정하고 모델(테이블)을 정의합니다.
+## 3. 기본 설정 및 초기화
+
+`app.py` 또는 `__init__.py`에서의 설정 방법입니다.
 
 ```python
+# app.py
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 app = Flask(__name__)
-# SQLite 데이터베이스 설정 (현재 디렉토리의 site.db 사용)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# config 설정
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db' # DB 파일 경로
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # 불필요한 이벤트 리스너 비활성화 (메모리 절약)
+
+# 객체 생성
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+```
 
-# 모델 정의 (User 테이블)
+---
+
+## 4. 모델(Model) 정의
+
+데이터베이스 테이블을 파이썬 클래스로 정의합니다. `db.Model`을 상속받습니다.
+
+### 4.1 기본 모델
+
+```python
 class User(db.Model):
+    __tablename__ = 'users' # 테이블 이름 명시 (생략 시 클래스명 소문자)
+    
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    
+    # 관계 설정 (One-to-Many: User -> Posts)
+    # lazy='dynamic'은 query 객체를 반환하여 추가 필터링 가능하게 함
+    posts = db.relationship('Post', backref='author', lazy=True)
 
     def __repr__(self):
         return f'<User {self.username}>'
 ```
 
-## 3. 데이터베이스 생성
+### 4.2 관계(Relationship) 정의
 
-Python 쉘 또는 앱 초기화 시점에 테이블을 생성합니다.
+**1:N (One-to-Many)**: 한 명의 유저가 여러 글을 작성
+
 ```python
-# python shell
-from app import app, db
-with app.app_context():
-    db.create_all() # 모델에 정의된 테이블 생성
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime(), default=db.func.now())
+    
+    # Foreign Key 설정 (users 테이블의 id 컬럼 참조)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    def __repr__(self):
+        return f'<Post {self.title}>'
 ```
 
-## 4. CRUD 작업
+**N:M (Many-to-Many)**: 글과 태그의 관계 (다대다)
+다대다 관계를 위해서는 별도의 **연결 테이블(Association Table)**이 필요합니다.
 
-### Create (생성)
 ```python
-user = User(username='me', email='me@example.com')
+# 연결 테이블
+post_tags = db.Table('post_tags',
+    db.Column('post_id', db.Integer, db.ForeignKey('post.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+
+    # Many-to-Many 관계 설정
+    posts = db.relationship('Post', secondary=post_tags, lazy='subquery',
+                            backref=db.backref('tags', lazy=True))
+```
+
+---
+
+## 5. Flask-Migrate 사용법 (마이그레이션)
+
+모델을 정의하거나 수정했다면, 이를 실제 DB에 반영해야 합니다.
+
+1.  **초기화 (최초 1회)**
+    ```bash
+    flask db init
+    # migrations 폴더가 생성됩니다.
+    ```
+
+2.  **마이그레이션 파일 생성 (모델 변경 시마다)**
+    ```bash
+    flask db migrate -m "Add User and Post tables"
+    # versions 폴더 안에 변경 사항이 기록된 파이썬 스크립트가 생성됩니다.
+    ```
+
+3.  **DB 업그레이드 (적용)**
+    ```bash
+    flask db upgrade
+    # 실제 DB에 테이블이 생성되거나 변경됩니다.
+    ```
+
+**참고**: 잘못된 마이그레이션을 취소하고 싶다면 `flask db downgrade`를 사용할 수 있습니다.
+
+---
+
+## 6. CRUD 데이터 조작 (Querying)
+
+Flask Shell(`flask shell`)이나 라우트 함수 내부에서 실행합니다.
+
+### 6.1 Create (생성)
+
+```python
+user = User(username='gildong', email='gildong@example.com')
 db.session.add(user)
-db.session.commit()
+db.session.commit() # 커밋을 해야 DB에 반영됨
 ```
 
-### Read (조회)
+### 6.2 Read (조회)
+
 ```python
-all_users = User.query.all()
-user = User.query.filter_by(username='me').first()
-user_by_id = db.session.get(User, 1) # Flask-SQLAlchemy 3.0+
+# 전체 조회
+users = User.query.all()
+
+# 조건 조회 (Primary Key)
+user = db.session.get(User, 1) # Flask-SQLAlchemy 3.0+ 권장
+
+# 조건 조회 (Filter)
+user = User.query.filter_by(username='gildong').first()
+active_users = User.query.filter(User.active == True).all()
+
+# 정렬 및 제한
+recent_posts = Post.query.order_by(Post.created_at.desc()).limit(5).all()
+
+# 페이지네이션 (Pagination)
+page = Post.query.paginate(page=1, per_page=10)
+print(page.items) # 현재 페이지 데이터
+print(page.total) # 전체 데이터 수
 ```
 
-### Update (수정)
+### 6.3 Update (수정)
+
 ```python
-user = User.query.first()
-user.username = 'new_name'
-db.session.commit()
+user = User.query.filter_by(username='gildong').first()
+user.username = 'new_gildong'
+db.session.commit() # 객체의 속성을 바꾸고 커밋하면 Update 쿼리 실행
 ```
 
-### Delete (삭제)
+### 6.4 Delete (삭제)
+
 ```python
-user = User.query.first()
+user = User.query.filter_by(username='new_gildong').first()
 db.session.delete(user)
 db.session.commit()
 ```
 
-## 5. Flask-Migrate (마이그레이션)
+---
 
-데이터베이스 스키마가 변경될 때 테이블을 직접 DROP하고 다시 만드는 대신 마이그레이션 도구를 사용합니다.
+## 7. 팁 및 베스트 프랙티스
 
-**설치**:
-```bash
-pip install Flask-Migrate
-```
-
-**설정**:
-```python
-from flask_migrate import Migrate
-migrate = Migrate(app, db)
-```
-
-**명령어**:
-```bash
-flask db init      # 초기 설정 (한 번만 실행)
-flask db migrate -m "Initial migration."  # 마이그레이션 스크립트 생성
-flask db upgrade   # DB에 적용
-```
+-   **Context 오류**: `RuntimeError: Working outside of application context.` 오류가 발생하면 `with app.app_context():` 블록 안에서 코드를 실행해야 합니다.
+-   **쿼리 최적화**: 관계 데이터가 많을 경우 `lazy` 로딩 옵션을 적절히 조절하거나 `joinedload` 등을 사용하여 N+1 문제를 방지해야 합니다.
+-   **구조 분리**: 모델이 많아지면 `models.py` 하나에 두지 말고 패키지(`models/`)로 분리하거나 기능별로 나누는 것이 좋습니다.
