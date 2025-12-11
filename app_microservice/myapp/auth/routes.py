@@ -1,10 +1,10 @@
 from flask import render_template
 from . import auth_bp
 
-@auth_bp.route('/login')
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    return "Login Page (Auth Blueprint)"
+    return render_template('auth/login.html')
 
-@auth_bp.route('/register')
+@auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    return "Register Page (Auth Blueprint)"
+    return render_template('auth/register.html')
