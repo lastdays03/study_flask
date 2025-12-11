@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+
+{% block title %}문의 완료{% endblock %}
+
+{% block content %}
+<h1>문의 완료</h1>
+<p>이름: {{ name }}</p>
+<p>이메일: {{ email }}</p>
+<p>제목: {{ subject }}</p>
+<p>메시지: {{ message }}</p>
+<a href="{{ url_for('index') }}">홈으로 돌아가기</a>
+{% endblock %}

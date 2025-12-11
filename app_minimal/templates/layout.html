@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Flask Minimal App{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('about') }}">About</a></li>
+                <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                <li><a href="{{ url_for('user', username='user1') }}">User</a></li>
+            </ul>
+            <ul>
+                <li><a href="{{ url_for('set_cookie_session') }}">Set Cookie and Session</a></li>
+                <li><a href="{{ url_for('delete_cookie_session') }}">Delete Cookie and Session</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="flashes">
+            {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Flask Minimal App</p>
+    </footer>
+</body>
+
+</html>

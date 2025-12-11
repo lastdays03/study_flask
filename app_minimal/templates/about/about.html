@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block title %}About Page{% endblock %}
+
+{% block content %}
+<h1>About Us</h1>
+{% if version == '2.0.1' %}
+<p>Flask Version: {{ version }}</p>
+{% endif %}
+<p>Flask Name: {{ name }}</p>
+<ul>
+    {% for user in users %}
+    <li>{{ user }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

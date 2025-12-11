@@ -1,14 +1,8 @@
-<!DOCTYPE html>
-<html lang="ko">
+{% extends "layout.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>Flask Template App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
+{% block title %}Index Page{% endblock %}
 
-<body>
-    <h1>Flask Template App</h1>
-</body>
-
-</html>
+{% block content %}
+<h1>Flask Template App</h1>
+<p>Welcome to the minimal app!</p>
+{% endblock %}
