@@ -9,6 +9,7 @@ instance/
 *.db
 .idea/
 uploads/
+upload
 .env
 .flaskenv
 .flask_config.py

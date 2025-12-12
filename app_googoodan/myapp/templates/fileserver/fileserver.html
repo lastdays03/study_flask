@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}파일서버 - Microservice App{% endblock %}
+
+{% block content %}
+<h2>파일서버</h2>
+<form method="post" action="{{ url_for('fileserver.fileserver') }}" enctype="multipart/form-data">
+    <input type="file" name="file" required />
+    <button type="submit" onclick="return confirm('파일을 업로드하시겠습니까?');">업로드</button>
+</form>
+<table>
+    <colgroup>
+        <col />
+        <col style="width: 60px;" />
+        <col style="width: 60px;" />
+        <col style="width: 15%;" />
+        <col style="width: 15%;" />
+        <col style="width: 10%;" />
+    </colgroup>
+    <thead>
+        <tr>
+            <th>파일명</th>
+            <th></th>
+            <th></th>
+            <th>생성일</th>
+            <th>수정일</th>
+            <th>크기</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for file in files %}
+        <tr>
+            <td>{{ file.name }}</td>
+            <td><a class="button" href="{{ url_for('fileserver.download', filename=file.name) }}"
+                    onclick="return confirm('파일을 다운로드하시겠습니까?');">다운</a></td>
+            <td><a class="button" href="{{ url_for('fileserver.delete', filename=file.name) }}"
+                    onclick="return confirm('파일을 삭제하시겠습니까?');">삭제</a></td>
+            <td>{{ file.created_at }}</td>
+            <td>{{ file.updated_at }}</td>
+            <td>{{ file.size }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -4,21 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Microservice App{% endblock %}</title>
+    <title>{% block title %}구구단 / 파일서버{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block head %}{% endblock %}
 </head>
 
 <body>
     <header>
-        <h1>Microservice Flask App</h1>
+        <h1>구구단 / 파일서버</h1>
         <nav>
             <ul>
-                <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-                <li><a href="{{ url_for('auth.register') }}">Register</a></li>
-                <li><a href="{{ url_for('api.get_users') }}">API Users</a></li>
                 <li><a href="{{ url_for('googoodan.googoodan') }}">구구단</a></li>
+                <li><a href="{{ url_for('fileserver.fileserver') }}">파일서버</a></li>
             </ul>
         </nav>
     </header>
@@ -36,10 +34,6 @@
 
         {% block content %}{% endblock %}
     </main>
-
-    <footer>
-        <p>&copy; 2024 Flask Study. All rights reserved.</p>
-    </footer>
 </body>
 
 </html>
