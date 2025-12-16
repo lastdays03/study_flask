@@ -18,6 +18,18 @@ Flask는 특정 데이터베이스를 강제하지 않지만, 파이썬 생태�
 pip install Flask-SQLAlchemy Flask-Migrate
 ```
 
+### 데이터베이스별 드라이버(Driver) 설치 요약
+
+SQLAlchemy와 데이터베이스를 연결하려면 각 DB에 맞는 파이썬 드라이버(DB API)를 설치해야 합니다.
+
+| 데이터베이스 | 드라이버 | 설치 커맨드 | 연결 URI 예시 |
+| :-- | :-- | :-- | :-- |
+| **PostgreSQL** | psycopg2 | `pip install psycopg2-binary` | `postgresql://user:pass@host/db` |
+| **MySQL / MariaDB** | mysqlclient | `pip install mysqlclient` | `mysql://user:pass@host/db` |
+| **MySQL / MariaDB (Pure)** | pymysql | `pip install pymysql` | `mysql+pymysql://user:pass@host/db` |
+| **Oracle** | cx_Oracle | `pip install cx_Oracle` | `oracle://user:pass@host/sid` |
+| **SQLite** | (Built-in) | (설치 불필요) | `sqlite:///app.db` |
+
 ---
 
 ## 3. 기본 설정 및 초기화
